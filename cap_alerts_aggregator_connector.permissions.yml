@@ -1,0 +1,4 @@
+administer cap feed sources:
+  title: 'Administer CAP Feed Sources'
+  description: 'Add, edit and delete external CAP Feed Source definitions polled by the CAP Aggregator.'
+  restrict access: true

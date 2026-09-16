@@ -1,0 +1,6 @@
+cap_alerts_parks_australia.cap_feed_source.collection:
+  title: 'CAP Feed Sources'
+  description: 'Manage external CAP Feed Sources polled by the CAP Aggregator.'
+  parent: cap_alerts.settings
+  route_name: entity.cap_feed_source.collection
+  weight: 10

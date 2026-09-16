@@ -1,0 +1,46 @@
+cap_alerts_parks_australia.cap_feed_source.*:
+  type: config_entity
+  label: 'CAP Feed Source'
+  mapping:
+    id:
+      type: string
+      label: 'Machine name'
+    label:
+      type: label
+      label: 'Label'
+    status:
+      type: boolean
+      label: 'Enabled'
+    feed_url:
+      type: string
+      label: 'Feed URL'
+    feed_format:
+      type: string
+      label: 'Feed format'
+    credential:
+      type: string
+      label: 'Credential'
+    min_severity:
+      type: string
+      label: 'Minimum severity'
+    min_certainty:
+      type: string
+      label: 'Minimum certainty'
+    min_urgency:
+      type: string
+      label: 'Minimum urgency'
+    category_allowlist:
+      type: string
+      label: 'Category allowlist'
+    msgtype_denylist:
+      type: string
+      label: 'msgType denylist'
+    agency_allowlist:
+      type: string
+      label: 'Agency allowlist'
+    agency_denylist:
+      type: string
+      label: 'Agency denylist'
+    require_geometry:
+      type: boolean
+      label: 'Require geometry'
