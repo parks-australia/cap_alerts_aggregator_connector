@@ -77,11 +77,12 @@ class CapFeedSourceForm extends EntityForm {
       '#default_value' => $entity->get('feed_format'),
       '#required' => TRUE,
     ];
-    $form['credential'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Credential (bearer token / API key)'),
-      '#description' => $this->t('Leave blank if the feed does not require authentication. <strong>Temporary:</strong> stored as plain config until the Key module can be installed in this environment.'),
-      '#default_value' => $entity->get('credential'),
+    $form['credential_key'] = [
+      '#type' => 'key_select',
+      '#title' => $this->t('Credential'),
+      '#description' => $this->t('The Key holding this feed\'s bearer token/API key, if it requires authentication. Manage Keys at <a href=":url">/admin/config/system/keys</a>.', [':url' => '/admin/config/system/keys']),
+      '#default_value' => $entity->get('credential_key'),
+      '#empty_option' => $this->t('- No credential required -'),
     ];
 
     $form['filters'] = [

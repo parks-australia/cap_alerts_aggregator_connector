@@ -17,9 +17,9 @@ cap_alerts_aggregator_connector.cap_feed_source.*:
     feed_format:
       type: string
       label: 'Feed format'
-    credential:
+    credential_key:
       type: string
-      label: 'Credential'
+      label: 'Credential key ID'
     min_severity:
       type: string
       label: 'Minimum severity'

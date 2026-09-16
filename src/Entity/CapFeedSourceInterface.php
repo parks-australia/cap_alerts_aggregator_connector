@@ -19,4 +19,9 @@ interface CapFeedSourceInterface extends ConfigEntityInterface {
    */
   public function getFeedFormat(): string;
 
+  /**
+   * Gets the ID of the Key entity holding this feed's credential, if any.
+   */
+  public function getCredentialKeyId(): string;
+
 }

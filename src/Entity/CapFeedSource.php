@@ -47,7 +47,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     "status",
  *     "feed_url",
  *     "feed_format",
- *     "credential",
+ *     "credential_key",
  *     "min_severity",
  *     "min_certainty",
  *     "min_urgency",
@@ -82,13 +82,9 @@ class CapFeedSource extends ConfigEntityBase implements CapFeedSourceInterface {
   protected string $feed_format = 'rss';
 
   /**
-   * Optional credential (bearer token/API key) required to fetch the feed.
-   *
-   * TODO: store via the Key module instead of plain config once it can be
-   * installed in this environment (composer.io/GitHub auth is currently
-   * blocked here) — see /memories/repo/cap-alerts-parks-australia-drupal-notes.md.
+   * ID of the Key entity holding this feed's bearer token/API key, if any.
    */
-  protected string $credential = '';
+  protected string $credential_key = '';
 
   /**
    * Minimum CAP severity to include: Extreme|Severe|Moderate|Minor|Unknown.
@@ -142,6 +138,24 @@ class CapFeedSource extends ConfigEntityBase implements CapFeedSourceInterface {
    */
   public function getFeedFormat(): string {
     return $this->feed_format;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCredentialKeyId(): string {
+    return $this->credential_key;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function calculateDependencies() {
+    parent::calculateDependencies();
+    if ($this->credential_key !== '') {
+      $this->addDependency('config', 'key.key.' . $this->credential_key);
+    }
+    return $this;
   }
 
 }
