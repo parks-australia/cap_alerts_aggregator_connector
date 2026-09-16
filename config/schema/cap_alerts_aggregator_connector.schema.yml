@@ -1,4 +1,4 @@
-cap_alerts_parks_australia.cap_feed_source.*:
+cap_alerts_aggregator_connector.cap_feed_source.*:
   type: config_entity
   label: 'CAP Feed Source'
   mapping:

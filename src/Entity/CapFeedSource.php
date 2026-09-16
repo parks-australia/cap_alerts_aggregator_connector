@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\cap_alerts_parks_australia\Entity;
+namespace Drupal\cap_alerts_aggregator_connector\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 
@@ -18,10 +18,10 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *   label = @Translation("CAP Feed Source"),
  *   label_collection = @Translation("CAP Feed Sources"),
  *   handlers = {
- *     "list_builder" = "Drupal\cap_alerts_parks_australia\CapFeedSourceListBuilder",
+ *     "list_builder" = "Drupal\cap_alerts_aggregator_connector\CapFeedSourceListBuilder",
  *     "form" = {
- *       "add" = "Drupal\cap_alerts_parks_australia\Form\CapFeedSourceForm",
- *       "edit" = "Drupal\cap_alerts_parks_australia\Form\CapFeedSourceForm",
+ *       "add" = "Drupal\cap_alerts_aggregator_connector\Form\CapFeedSourceForm",
+ *       "edit" = "Drupal\cap_alerts_aggregator_connector\Form\CapFeedSourceForm",
  *       "delete" = "Drupal\Core\Entity\EntityDeleteForm"
  *     },
  *     "route_provider" = {

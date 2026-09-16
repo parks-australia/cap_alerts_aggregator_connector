@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\cap_alerts_parks_australia;
+namespace Drupal\cap_alerts_aggregator_connector;
 
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
@@ -24,7 +24,7 @@ class CapFeedSourceListBuilder extends ConfigEntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
-    /** @var \Drupal\cap_alerts_parks_australia\Entity\CapFeedSourceInterface $entity */
+    /** @var \Drupal\cap_alerts_aggregator_connector\Entity\CapFeedSourceInterface $entity */
     $row['label'] = $entity->label();
     $row['feed_url'] = $entity->getFeedUrl();
     $row['feed_format'] = $entity->getFeedFormat();

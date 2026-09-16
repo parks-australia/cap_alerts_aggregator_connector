@@ -1,5 +1,5 @@
 {
-  "name": "drupal/cap_alerts_parks_australia",
+  "name": "drupal/cap_alerts_aggregator_connector",
   "description": "Extends the CAP Alerts modules by providing functionality unique to Parks Australia.",
   "type": "drupal-module",
   "keywords": [
@@ -10,7 +10,6 @@
     "Emergency alerts",
     "Emergency warning system",
     "Incident response",
-    "Parks Australia",
     "Safety alerts"
   ],
   "license": "GPL-2.0-or-later",
@@ -19,11 +18,11 @@
     {
       "type": "package",
       "package": {
-        "name": "drupal/cap_alerts_parks_australia",
-        "version": "0.15",
+        "name": "drupal/cap_alerts_aggregator_connector",
+        "version": "0.1",
         "type": "drupal-module",
         "source": {
-          "url": "https://github.com/parks-australia/cap_alerts_parks_australia.git",
+          "url": "https://github.com/parks-australia/cap_alerts_aggregator_connector.git",
           "type": "git",
           "reference": "refs/heads/dev"
         }

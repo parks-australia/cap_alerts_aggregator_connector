@@ -1,4 +1,4 @@
-cap_alerts_parks_australia.cap_feed_source.add:
+cap_alerts_aggregator_connector.cap_feed_source.add:
   route_name: entity.cap_feed_source.add_form
   title: 'Add CAP Feed Source'
   appears_on:

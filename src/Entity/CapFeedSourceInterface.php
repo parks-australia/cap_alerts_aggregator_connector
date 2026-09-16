@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\cap_alerts_parks_australia\Entity;
+namespace Drupal\cap_alerts_aggregator_connector\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 

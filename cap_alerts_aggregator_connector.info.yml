@@ -1,12 +1,9 @@
-name: 'CAP Alerts Parks Australia'
+name: 'CAP Alerts Aggregator Connector'
 type: module
-description: 'Integrates Parks Australia-specific entities with the CAP Alerts module'
+description: 'Allows storing CAP Alert feed URLs and filter parameters as Drupal entities, for use in the CAP Aggregator project'
 package: 'CAP Safety Alerts'
 core_version_requirement: ^11
-version: '0.15'
+version: '0.1'
 dependencies:
-  - drupal:auto_entitylabel
   - drupal:cap_alerts
   - drupal:geofield
-  - drupal:pathauto
-  - drupal:gatsby_endpoints

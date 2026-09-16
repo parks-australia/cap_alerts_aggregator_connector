@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\cap_alerts_parks_australia\Form;
+namespace Drupal\cap_alerts_aggregator_connector\Form;
 
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
@@ -41,7 +41,7 @@ class CapFeedSourceForm extends EntityForm {
    */
   public function form(array $form, FormStateInterface $form_state): array {
     $form = parent::form($form, $form_state);
-    /** @var \Drupal\cap_alerts_parks_australia\Entity\CapFeedSourceInterface $entity */
+    /** @var \Drupal\cap_alerts_aggregator_connector\Entity\CapFeedSourceInterface $entity */
     $entity = $this->entity;
 
     $form['label'] = [
@@ -54,7 +54,7 @@ class CapFeedSourceForm extends EntityForm {
       '#type' => 'machine_name',
       '#default_value' => $entity->id(),
       '#machine_name' => [
-        'exists' => ['Drupal\cap_alerts_parks_australia\Entity\CapFeedSource', 'load'],
+        'exists' => ['Drupal\cap_alerts_aggregator_connector\Entity\CapFeedSource', 'load'],
       ],
       '#disabled' => !$entity->isNew(),
     ];
