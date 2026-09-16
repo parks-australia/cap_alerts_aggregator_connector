@@ -4,3 +4,10 @@ cap_alerts_aggregator_connector.cap_feed_source.collection:
   parent: cap_alerts.settings
   route_name: entity.cap_feed_source.collection
   weight: 10
+
+cap_alerts_aggregator_connector.settings_form:
+  title: 'CAP Aggregator Connector settings'
+  description: 'Configure the shared secret used to authenticate the CAP Aggregator.'
+  parent: cap_alerts.settings
+  route_name: cap_alerts_aggregator_connector.settings_form
+  weight: 11

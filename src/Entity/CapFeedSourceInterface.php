@@ -20,8 +20,24 @@ interface CapFeedSourceInterface extends ConfigEntityInterface {
   public function getFeedFormat(): string;
 
   /**
+   * Gets the root/parent element name wrapping <alert>s in a CAP-XML feed.
+   *
+   * Only meaningful when the feed format is 'cap-xml'.
+   */
+  public function getCapXmlRootElement(): string;
+
+  /**
    * Gets the ID of the Key entity holding this feed's credential, if any.
    */
   public function getCredentialKeyId(): string;
+
+  /**
+   * Gets the per-park filter overrides for this source.
+   *
+   * @return array<int, array<string, string>>
+   *   Each item: {gatsby_endpoint, min_severity, min_certainty, min_urgency,
+   *   category_allowlist, agency_allowlist, agency_denylist}.
+   */
+  public function getParkOverrides(): array;
 
 }

@@ -47,6 +47,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     "status",
  *     "feed_url",
  *     "feed_format",
+ *     "cap_xml_root_element",
  *     "credential_key",
  *     "min_severity",
  *     "min_certainty",
@@ -55,7 +56,8 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     "msgtype_denylist",
  *     "agency_allowlist",
  *     "agency_denylist",
- *     "require_geometry"
+ *     "require_geometry",
+ *     "park_overrides"
  *   }
  * )
  */
@@ -80,6 +82,15 @@ class CapFeedSource extends ConfigEntityBase implements CapFeedSourceInterface {
    * The feed format: rss|atom|cap-xml|geojson|edxl-de.
    */
   protected string $feed_format = 'rss';
+
+  /**
+   * Root/parent element name wrapping the <alert> elements in a CAP-XML feed.
+   *
+   * CAP v1.2 only defines the <alert> element itself, not a container for
+   * multiple alerts in one document/feed, so this varies from feed to feed.
+   * Only meaningful (and required) when feed_format is 'cap-xml'.
+   */
+  protected string $cap_xml_root_element = '';
 
   /**
    * ID of the Key entity holding this feed's bearer token/API key, if any.
@@ -127,6 +138,17 @@ class CapFeedSource extends ConfigEntityBase implements CapFeedSourceInterface {
   protected bool $require_geometry = FALSE;
 
   /**
+   * Per-park filter overrides for this (typically multi-park) source.
+   *
+   * Each item: {gatsby_endpoint, min_severity, min_certainty, min_urgency,
+   * category_allowlist, agency_allowlist, agency_denylist}. Blank override
+   * values mean "use this source's base filter" for that field.
+   *
+   * @var array<int, array<string, string>>
+   */
+  protected array $park_overrides = [];
+
+  /**
    * {@inheritdoc}
    */
   public function getFeedUrl(): string {
@@ -143,8 +165,22 @@ class CapFeedSource extends ConfigEntityBase implements CapFeedSourceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getCapXmlRootElement(): string {
+    return $this->cap_xml_root_element;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getCredentialKeyId(): string {
     return $this->credential_key;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getParkOverrides(): array {
+    return $this->park_overrides;
   }
 
   /**

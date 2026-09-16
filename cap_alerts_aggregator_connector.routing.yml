@@ -1,0 +1,16 @@
+cap_alerts_aggregator_connector.settings_form:
+  path: '/admin/config/services/cap-alerts/aggregator-connector'
+  defaults:
+    _form: '\Drupal\cap_alerts_aggregator_connector\Form\CapAlertsAggregatorConnectorSettingsForm'
+    _title: 'CAP Aggregator Connector settings'
+  requirements:
+    _permission: 'administer cap feed sources'
+
+cap_alerts_aggregator_connector.api.feed_sources:
+  path: '/api/cap-alerts/feed-sources'
+  defaults:
+    _controller: '\Drupal\cap_alerts_aggregator_connector\Controller\CapFeedSourceApiController::list'
+    _format: 'json'
+  requirements:
+    _access: 'TRUE'
+    _method: 'GET'
