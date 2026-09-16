@@ -3,7 +3,8 @@ type: module
 description: 'Allows storing CAP Alert feed URLs and filter parameters as Drupal entities, for use in the CAP Aggregator project'
 package: 'CAP Safety Alerts'
 core_version_requirement: ^11
-version: '0.1'
+version: '0.2'
 dependencies:
   - drupal:cap_alerts
   - drupal:geofield
+  - drupal:key

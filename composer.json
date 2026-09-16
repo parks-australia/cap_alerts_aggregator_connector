@@ -1,6 +1,6 @@
 {
   "name": "drupal/cap_alerts_aggregator_connector",
-  "description": "Extends the CAP Alerts modules by providing functionality unique to Parks Australia.",
+  "description": "Allows storing CAP Alert feed URLs and filter parameters as Drupal entities, for use in the CAP Aggregator project.",
   "type": "drupal-module",
   "keywords": [
     "Australian Warning System",
@@ -19,7 +19,7 @@
       "type": "package",
       "package": {
         "name": "drupal/cap_alerts_aggregator_connector",
-        "version": "0.1",
+        "version": "0.2",
         "type": "drupal-module",
         "source": {
           "url": "https://github.com/parks-australia/cap_alerts_aggregator_connector.git",
@@ -30,6 +30,7 @@
     }
   ],
   "require": {
-    "drupal/cap_alerts": "^2.1"
+    "drupal/cap_alerts": "^2.1",
+    "drupal/key": "^1.22"
   }
 }
