@@ -305,11 +305,52 @@ class CapFeedSourceForm extends EntityForm {
     $this->entity->set('park_overrides', array_values($overrides));
 
     $result = parent::save($form, $form_state);
+    $duplicates = $this->getDuplicateFeedSourceLabels((string) $form_state->getValue('feed_url'));
+    if ($duplicates) {
+      $this->messenger()->addWarning($this->t('This Feed URL is also used by: @sources. The aggregator polls every enabled source independently, so overlapping feeds can publish duplicate alerts.', [
+        '@sources' => implode(', ', $duplicates),
+      ]));
+    }
     $this->messenger()->addStatus($this->t('Saved the %label CAP Feed Source.', [
       '%label' => $this->entity->label(),
     ]));
     $form_state->setRedirectUrl($this->entity->toUrl('collection'));
     return $result;
+  }
+
+  /**
+   * Returns labels of other feed sources with the same normalized URL.
+   */
+  private function getDuplicateFeedSourceLabels(string $feedUrl): array {
+    $normalizedFeedUrl = $this->normalizeFeedUrl($feedUrl);
+    if ($normalizedFeedUrl === '') {
+      return [];
+    }
+
+    $storage = $this->entityTypeManager->getStorage('cap_feed_source');
+    $duplicates = [];
+    foreach ($storage->loadMultiple() as $source) {
+      /** @var \Drupal\cap_alerts_aggregator_connector\Entity\CapFeedSourceInterface $source */
+      if ($source->id() === $this->entity->id()) {
+        continue;
+      }
+      if ($this->normalizeFeedUrl($source->getFeedUrl()) === $normalizedFeedUrl) {
+        $duplicates[] = $source->label();
+      }
+    }
+    return $duplicates;
+  }
+
+  /**
+   * Makes harmless URL presentation differences compare consistently.
+   */
+  private function normalizeFeedUrl(string $feedUrl): string {
+    $feedUrl = trim($feedUrl);
+    $fragmentPosition = strpos($feedUrl, '#');
+    if ($fragmentPosition !== FALSE) {
+      $feedUrl = substr($feedUrl, 0, $fragmentPosition);
+    }
+    return rtrim($feedUrl, '/');
   }
 
 }
