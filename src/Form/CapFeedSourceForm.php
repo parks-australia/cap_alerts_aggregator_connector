@@ -290,6 +290,12 @@ class CapFeedSourceForm extends EntityForm {
     if ($form_state->getValue('feed_format') === 'cap-xml' && trim((string) $form_state->getValue('cap_xml_root_element')) === '') {
       $form_state->setErrorByName('cap_xml_root_element', $this->t('The CAP-XML root element name is required when the feed format is CAP XML.'));
     }
+    $duplicates = $this->getDuplicateFeedSourceLabels((string) $form_state->getValue('feed_url'));
+    if ($duplicates) {
+      $form_state->setErrorByName('feed_url', $this->t('This Feed URL is already used by: @sources. Configure one source and use its filters or per-park overrides instead.', [
+        '@sources' => implode(', ', $duplicates),
+      ]));
+    }
   }
 
   /**
@@ -305,12 +311,6 @@ class CapFeedSourceForm extends EntityForm {
     $this->entity->set('park_overrides', array_values($overrides));
 
     $result = parent::save($form, $form_state);
-    $duplicates = $this->getDuplicateFeedSourceLabels((string) $form_state->getValue('feed_url'));
-    if ($duplicates) {
-      $this->messenger()->addWarning($this->t('This Feed URL is also used by: @sources. The aggregator polls every enabled source independently, so overlapping feeds can publish duplicate alerts.', [
-        '@sources' => implode(', ', $duplicates),
-      ]));
-    }
     $this->messenger()->addStatus($this->t('Saved the %label CAP Feed Source.', [
       '%label' => $this->entity->label(),
     ]));
@@ -319,7 +319,7 @@ class CapFeedSourceForm extends EntityForm {
   }
 
   /**
-   * Returns labels of other feed sources with the same normalized URL.
+  * Returns labels of other feed sources with the same normalized URL.
    */
   private function getDuplicateFeedSourceLabels(string $feedUrl): array {
     $normalizedFeedUrl = $this->normalizeFeedUrl($feedUrl);
