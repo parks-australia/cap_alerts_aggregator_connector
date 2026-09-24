@@ -101,7 +101,8 @@ class CapFeedSourceForm extends EntityForm {
 
     $form['filters'] = [
       '#type' => 'details',
-      '#title' => $this->t('Filters'),
+      '#title' => $this->t('Aggregator filters'),
+      '#description' => $this->t('These filters are applied by the CAP Aggregator after it retrieves and normalizes alerts. They do not add query parameters to the Feed URL or reduce requests made to the provider.'),
       '#open' => TRUE,
     ];
     $form['filters']['min_severity'] = [
@@ -136,14 +137,14 @@ class CapFeedSourceForm extends EntityForm {
     ];
     $form['filters']['agency_allowlist'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Agency allowlist'),
-      '#description' => $this->t('Comma-separated originating agency codes to include. Leave blank to allow all.'),
+      '#title' => $this->t('CAP sender allowlist'),
+      '#description' => $this->t('Comma-separated CAP &lt;sender&gt; values to include. Leave blank to allow all.'),
       '#default_value' => $entity->get('agency_allowlist'),
     ];
     $form['filters']['agency_denylist'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Agency denylist'),
-      '#description' => $this->t('Comma-separated originating agency codes to exclude, e.g. non-hazard incident feeds.'),
+      '#title' => $this->t('CAP sender denylist'),
+      '#description' => $this->t('Comma-separated CAP &lt;sender&gt; values to exclude.'),
       '#default_value' => $entity->get('agency_denylist'),
     ];
     $form['filters']['require_geometry'] = [
@@ -176,7 +177,7 @@ class CapFeedSourceForm extends EntityForm {
     $wrapper = [
       '#type' => 'details',
       '#title' => $this->t('Per-park overrides'),
-      '#description' => $this->t('Tune filter thresholds per park for this (typically multi-park) source. Leave a field blank to use this source\'s base filter for that park.'),
+      '#description' => $this->t('These overrides apply only to the matching park\'s published output, after geographic matching. Leave a field blank to use this source\'s base filter for that park.'),
       '#open' => !empty($initial),
       '#tree' => TRUE,
       '#prefix' => '<div id="park-overrides-wrapper">',
@@ -241,12 +242,12 @@ class CapFeedSourceForm extends EntityForm {
     ];
     $row['agency_allowlist'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Agency allowlist override'),
+      '#title' => $this->t('CAP sender allowlist override'),
       '#default_value' => $default['agency_allowlist'] ?? '',
     ];
     $row['agency_denylist'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Agency denylist override'),
+      '#title' => $this->t('CAP sender denylist override'),
       '#default_value' => $default['agency_denylist'] ?? '',
     ];
     return $row;
