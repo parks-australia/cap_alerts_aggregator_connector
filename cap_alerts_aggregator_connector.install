@@ -1,0 +1,18 @@
+<?php
+
+/**
+ * Migrates generic GeoJSON feed sources to the DataQuoll-specific adapter.
+ */
+function cap_alerts_aggregator_connector_update_9001(): void {
+  $storage = \Drupal::entityTypeManager()->getStorage('cap_feed_source');
+  $ids = $storage->getQuery()->accessCheck(FALSE)->execute();
+
+  foreach ($storage->loadMultiple($ids) as $source) {
+    /** @var \Drupal\cap_alerts_aggregator_connector\Entity\CapFeedSource $source */
+    if ($source->get('feed_format') !== 'geojson') {
+      continue;
+    }
+    $source->set('feed_format', 'dataquoll-geojson');
+    $source->save();
+  }
+}

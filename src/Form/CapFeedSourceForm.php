@@ -17,7 +17,7 @@ class CapFeedSourceForm extends EntityForm {
     'rss' => 'RSS (items link to canonical CAP XML)',
     'atom' => 'Atom (entries link to canonical CAP XML)',
     'cap-xml' => 'CAP XML (feed itself is the alert)',
-    'geojson' => 'GeoJSON (other external CAP aggregators)',
+    'dataquoll-geojson' => 'DataQuoll GeoJSON (normalized incident feed)',
     'edxl-de' => 'EDXL-DE (distribution envelope)',
   ];
 
@@ -150,7 +150,7 @@ class CapFeedSourceForm extends EntityForm {
     $form['filters']['require_geometry'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Require polygon/circle geometry'),
-      '#description' => $this->t('Only applies to CAP-XML-style sources. Point-only GeoJSON sources are instead filtered by point-in-park-boundary.'),
+      '#description' => $this->t('Only applies to CAP-XML-style sources. DataQuoll GeoJSON features are matched to park boundaries using their supplied geometry.'),
       '#default_value' => $entity->get('require_geometry'),
     ];
 

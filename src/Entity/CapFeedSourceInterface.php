@@ -15,7 +15,7 @@ interface CapFeedSourceInterface extends ConfigEntityInterface {
   public function getFeedUrl(): string;
 
   /**
-   * Gets the feed format (rss|atom|cap-xml|geojson|edxl-de).
+  * Gets the feed format (rss|atom|cap-xml|dataquoll-geojson|edxl-de).
    */
   public function getFeedFormat(): string;
 
