@@ -20,6 +20,11 @@ interface CapFeedSourceInterface extends ConfigEntityInterface {
   public function getFeedFormat(): string;
 
   /**
+   * Checks if the feed is enabled.
+   */
+  public function isFeedEnabled(): bool;
+
+  /**
    * Gets the root/parent element name wrapping <alert>s in a CAP-XML feed.
    *
    * Only meaningful when the feed format is 'cap-xml'.

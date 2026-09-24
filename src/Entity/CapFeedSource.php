@@ -161,6 +161,13 @@ class CapFeedSource extends ConfigEntityBase implements CapFeedSourceInterface {
   public function getFeedFormat(): string {
     return $this->feed_format;
   }
+  
+  /**
+   * {@inheritdoc}
+   */
+  public function isFeedEnabled(): bool {
+    return $this->status;
+  }
 
   /**
    * {@inheritdoc}

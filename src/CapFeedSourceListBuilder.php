@@ -52,6 +52,7 @@ class CapFeedSourceListBuilder extends ConfigEntityListBuilder {
   public function buildHeader() {
     $header['label'] = $this->t('Label');
     $header['feed_url'] = $this->t('Feed URL');
+    $header['status'] = $this->t('Status');
     $header['feed_format'] = $this->t('Format');
     return $header + parent::buildHeader();
   }
@@ -63,6 +64,7 @@ class CapFeedSourceListBuilder extends ConfigEntityListBuilder {
     /** @var \Drupal\cap_alerts_aggregator_connector\Entity\CapFeedSourceInterface $entity */
     $row['label'] = $entity->label();
     $row['feed_url'] = $entity->getFeedUrl();
+    $row['status'] = $entity->isFeedEnabled() ? $this->t('Enabled') : $this->t('Disabled');
     $row['feed_format'] = $entity->getFeedFormat();
     return $row + parent::buildRow($entity);
   }
