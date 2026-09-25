@@ -33,15 +33,15 @@ class CapFeedSourceListBuilder extends ConfigEntityListBuilder {
       '#attributes' => ['class' => ['cap-feed-source-endpoint-info']],
       'path' => [
         '#type' => 'markup',
-        '#markup' => '<p>' . $this->t('The CAP Aggregator reads this list from: <code>@path</code>', [
+        '#markup' => '<p>' . $this->t('<strong>Manage your CAP Alert Feed sources here.</strong></p><p>These feeds are not imported into Drupal, but are instead exposed via a custom endpoint to be ingested into a CAP aggregator elsewhere: <code>@path</code>', [
           '@path' => $endpointPath,
         ]) . '</p>',
       ],
       'explanation' => [
         '#type' => 'markup',
-        '#markup' => '<p>' . $this->t('This endpoint can only be accessed by sending the correct shared secret in an <code>X-Cap-Aggregator-Secret</code> request header. Requests with a missing or incorrect secret receive a 403 response with no feed data. Configure the shared secret on the <a href=":settings_url">CAP Aggregator Connector settings</a> page.', [
+        '#markup' => '<p>' . $this->t('This endpoint is protected because it exposes any Key values you may add to the Feed sources.</p><p>Access it by configuring a shared secret and by sending it in an <code>X-Cap-Aggregator-Secret</code> request header. Requests with a missing or incorrect secret receive a 403 response with no feed data.</p><p>Configure the shared secret on the <a href=":settings_url">CAP Aggregator Connector settings</a> page.', [
           ':settings_url' => $settingsUrl->toString(),
-        ]) . '</p>',
+        ]) . '</p><p>Note that the endpoint health of a Feed source is not tested by this listing, as this module does not fetch any data from them.</p>',
       ],
     ];
   }
