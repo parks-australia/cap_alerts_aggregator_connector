@@ -1,0 +1,8 @@
+name: 'CAP Alerts Aggregator Connector: DataQuoll Adaptor'
+type: module
+description: 'Adds DataQuoll GeoJSON Feed Source support to the CAP Alerts Aggregator Connector.'
+package: 'CAP Safety Alerts'
+core_version_requirement: ^11
+dependencies:
+  - cap_alerts_aggregator_connector:cap_alerts_aggregator_connector
+  - drupal:key

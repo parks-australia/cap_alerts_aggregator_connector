@@ -1,0 +1,22 @@
+<?php
+
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
+/**
+ * @file
+ * DataQuoll Feed Source integration hooks.
+ */
+
+/**
+ * Implements hook_cap_feed_source_formats_alter().
+ */
+function cap_alerts_aggregator_connector_dataquoll_adaptor_cap_feed_source_formats_alter(array &$formats): void {
+  $formats['dataquoll-geojson'] = new TranslatableMarkup('DataQuoll GeoJSON (normalized incident feed)');
+}
+
+/**
+ * Implements hook_form_cap_feed_source_form_alter().
+ */
+function cap_alerts_aggregator_connector_dataquoll_adaptor_form_cap_feed_source_form_alter(array &$form): void {
+  $form['feed_format']['#description'] .= ' ' . new TranslatableMarkup('DataQuoll GeoJSON sources use the documented /api/v1/incidents response.');
+}

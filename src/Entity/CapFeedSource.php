@@ -7,8 +7,8 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
 /**
  * Defines the CAP Feed Source config entity.
  *
- * Represents one external feed (RSS/Atom/CAP-XML/DataQuoll GeoJSON/EDXL-DE)
- * polled by the CAP Aggregator. These are always park-agnostic —
+ * Represents one external feed polled by the CAP Aggregator. These are always
+ * park-agnostic —
  * unlike Drupal-authored `cap_alert_message` nodes (which carry an explicit
  * `field_site`), external alerts are attributed to a park by the aggregator
  * via geometry matching against each park's boundary, never configured here.
@@ -79,7 +79,7 @@ class CapFeedSource extends ConfigEntityBase implements CapFeedSourceInterface {
   protected string $feed_url = '';
 
   /**
-  * The feed format: rss|atom|cap-xml|dataquoll-geojson|edxl-de.
+    * The feed format is supplied by the base module or an optional adapter.
    */
   protected string $feed_format = 'rss';
 

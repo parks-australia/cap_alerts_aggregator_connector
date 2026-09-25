@@ -13,11 +13,10 @@ class CapFeedSourceForm extends EntityForm {
   /**
    * Valid CAP v1.2 feed formats supported by the aggregator.
    */
-  private const FEED_FORMATS = [
+  private const BASE_FEED_FORMATS = [
     'rss' => 'RSS (items link to canonical CAP XML)',
     'atom' => 'Atom (entries link to canonical CAP XML)',
     'cap-xml' => 'CAP XML (feed itself is the alert)',
-    'dataquoll-geojson' => 'DataQuoll GeoJSON (normalized incident feed)',
     'edxl-de' => 'EDXL-DE (distribution envelope)',
   ];
 
@@ -69,11 +68,13 @@ class CapFeedSourceForm extends EntityForm {
       '#default_value' => $entity->get('feed_url'),
       '#required' => TRUE,
     ];
+    $feedFormats = self::BASE_FEED_FORMATS;
+    \Drupal::moduleHandler()->alter('cap_feed_source_formats', $feedFormats);
     $form['feed_format'] = [
       '#type' => 'select',
       '#title' => $this->t('Feed format'),
-      '#description' => $this->t('The format must be set explicitly; the aggregator does not auto-detect it.'),
-      '#options' => self::FEED_FORMATS,
+      '#description' => $this->t('The format must be set explicitly; the aggregator does not auto-detect it. Note that RSS and Atom feeds will only be imported if their items link to valid CAP-XML alerts. Embedded alerts in the <code>content</code> element will be ignored, as will links returning non-CAP XML responses.'),
+      '#options' => $feedFormats,
       '#default_value' => $entity->get('feed_format'),
       '#required' => TRUE,
     ];
@@ -150,7 +151,7 @@ class CapFeedSourceForm extends EntityForm {
     $form['filters']['require_geometry'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Require polygon/circle geometry'),
-      '#description' => $this->t('Only applies to CAP-XML-style sources. DataQuoll GeoJSON features are matched to park boundaries using their supplied geometry.'),
+      '#description' => $this->t('Only applies to CAP-XML-style sources.'),
       '#default_value' => $entity->get('require_geometry'),
     ];
 
