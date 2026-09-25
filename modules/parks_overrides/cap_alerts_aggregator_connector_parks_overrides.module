@@ -25,7 +25,7 @@ function cap_alerts_aggregator_connector_parks_overrides_cap_feed_source_form_al
   $form['parks_overrides'] = [
     '#type' => 'details',
     '#title' => new TranslatableMarkup('Per-park overrides'),
-    '#description' => new TranslatableMarkup('Override a source filter for one park. Blank fields use the source filter. Each park can have only one override.'),
+    '#description' => new TranslatableMarkup('A park with no override already uses this source\'s filters after geographic matching. Add an override only to change one or more filters for that park. Blank override fields inherit their corresponding source filter; a group with every field blank has no effect. Each park can have only one override.'),
     '#tree' => TRUE,
     '#open' => !empty($initial),
     '#prefix' => '<div id="parks-overrides-wrapper">',
