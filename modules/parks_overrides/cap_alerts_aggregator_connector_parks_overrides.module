@@ -1,0 +1,177 @@
+<?php
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
+/**
+ * @file
+ * Gatsby endpoint-specific CAP Feed Source override hooks.
+ */
+
+/**
+ * Implements hook_cap_feed_source_form_alter().
+ */
+function cap_alerts_aggregator_connector_parks_overrides_cap_feed_source_form_alter(array &$form, FormStateInterface $form_state, $entity): void {
+  $sourceId = $entity->id();
+  $config = \Drupal::config('cap_alerts_aggregator_connector_parks_overrides.source.' . $sourceId);
+  $existing = $config->get('overrides') ?? [];
+  if ($form_state->get('parks_overrides_count') === NULL) {
+    $form_state->set('parks_overrides_count', max(count($existing), 1));
+    $form_state->set('parks_overrides_initial', array_values($existing));
+  }
+
+  $count = $form_state->get('parks_overrides_count');
+  $initial = $form_state->get('parks_overrides_initial');
+  $form['parks_overrides'] = [
+    '#type' => 'details',
+    '#title' => new TranslatableMarkup('Per-park overrides'),
+    '#description' => new TranslatableMarkup('Override a source filter for one park. Blank fields use the source filter. Each park can have only one override.'),
+    '#tree' => TRUE,
+    '#open' => !empty($initial),
+    '#prefix' => '<div id="parks-overrides-wrapper">',
+    '#suffix' => '</div>',
+  ];
+  $form['parks_overrides']['rows'] = ['#tree' => TRUE];
+  for ($delta = 0; $delta < $count; $delta++) {
+    $form['parks_overrides']['rows'][$delta] = cap_alerts_aggregator_connector_parks_overrides_row($delta, $initial[$delta] ?? []);
+  }
+  $form['parks_overrides']['add'] = [
+    '#type' => 'submit',
+    '#value' => new TranslatableMarkup('Add another override'),
+    '#submit' => ['cap_alerts_aggregator_connector_parks_overrides_add'],
+    '#limit_validation_errors' => [],
+    '#ajax' => [
+      'callback' => 'cap_alerts_aggregator_connector_parks_overrides_ajax',
+      'wrapper' => 'parks-overrides-wrapper',
+    ],
+  ];
+}
+
+/**
+ * Builds a single park-specific override group.
+ */
+function cap_alerts_aggregator_connector_parks_overrides_row(int $delta, array $default): array {
+  $parks = ['' => new TranslatableMarkup('- Select -')];
+  foreach (\Drupal::entityTypeManager()->getStorage('gatsby_endpoint')->loadMultiple() as $endpoint) {
+    if (!str_ends_with($endpoint->id(), '_app')) {
+      $parks[$endpoint->id()] = $endpoint->label();
+    }
+  }
+  $severity = ['Unknown', 'Minor', 'Moderate', 'Severe', 'Extreme'];
+  $certainty = ['Unknown', 'Unlikely', 'Possible', 'Likely', 'Observed'];
+  $urgency = ['Unknown', 'Past', 'Future', 'Expected', 'Immediate'];
+  return [
+    '#type' => 'fieldset',
+    '#title' => new TranslatableMarkup('Override @number', ['@number' => $delta + 1]),
+    'park_id' => ['#type' => 'select', '#title' => new TranslatableMarkup('Park'), '#options' => $parks, '#default_value' => $default['parkId'] ?? ''],
+    'min_severity' => cap_alerts_aggregator_connector_parks_overrides_select('Minimum severity', $severity, $default['minSeverity'] ?? ''),
+    'min_certainty' => cap_alerts_aggregator_connector_parks_overrides_select('Minimum certainty', $certainty, $default['minCertainty'] ?? ''),
+    'min_urgency' => cap_alerts_aggregator_connector_parks_overrides_select('Minimum urgency', $urgency, $default['minUrgency'] ?? ''),
+    'category_allowlist' => ['#type' => 'textfield', '#title' => new TranslatableMarkup('Category allowlist'), '#default_value' => $default['categoryAllowlist'] ?? ''],
+    'msgtype_denylist' => ['#type' => 'textfield', '#title' => new TranslatableMarkup('msgType denylist'), '#default_value' => $default['msgtypeDenylist'] ?? ''],
+    'agency_allowlist' => ['#type' => 'textfield', '#title' => new TranslatableMarkup('CAP sender allowlist'), '#default_value' => $default['agencyAllowlist'] ?? ''],
+    'agency_denylist' => ['#type' => 'textfield', '#title' => new TranslatableMarkup('CAP sender denylist'), '#default_value' => $default['agencyDenylist'] ?? ''],
+    'require_geometry' => [
+      '#type' => 'select',
+      '#title' => new TranslatableMarkup('Require polygon/circle geometry'),
+      '#options' => [
+        '' => new TranslatableMarkup('- Use source filter -'),
+        '1' => new TranslatableMarkup('Required'),
+        '0' => new TranslatableMarkup('Not required'),
+      ],
+      '#default_value' => $default['requireGeometry'] ?? '',
+    ],
+  ];
+}
+
+/**
+ * Builds a select field whose blank value means use the source filter.
+ */
+function cap_alerts_aggregator_connector_parks_overrides_select(string $title, array $options, string $default): array {
+  return [
+    '#type' => 'select',
+    '#title' => new TranslatableMarkup($title),
+    '#options' => ['' => new TranslatableMarkup('- No override -')] + array_combine($options, $options),
+    '#default_value' => $default,
+  ];
+}
+
+/**
+ * Adds an override group through AJAX.
+ */
+function cap_alerts_aggregator_connector_parks_overrides_add(array &$form, FormStateInterface $form_state): void {
+  $form_state->set('parks_overrides_count', $form_state->get('parks_overrides_count') + 1);
+  $form_state->setRebuild();
+}
+
+/**
+ * Returns the rebuilt override groups.
+ */
+function cap_alerts_aggregator_connector_parks_overrides_ajax(array &$form): array {
+  return $form['parks_overrides'];
+}
+
+/**
+ * Implements hook_cap_feed_source_validate_alter().
+ */
+function cap_alerts_aggregator_connector_parks_overrides_cap_feed_source_validate_alter(array &$form, FormStateInterface $form_state): void {
+  $parks = [];
+  foreach ((array) $form_state->getValue(['parks_overrides', 'rows']) as $delta => $row) {
+    $parkId = $row['park_id'] ?? '';
+    if ($parkId === '') {
+      continue;
+    }
+    if (isset($parks[$parkId])) {
+      $form_state->setErrorByName('parks_overrides][rows][' . $delta . '][park_id', new TranslatableMarkup('Only one override is permitted for @park.', ['@park' => $parkId]));
+    }
+    $parks[$parkId] = TRUE;
+  }
+}
+
+/**
+ * Implements hook_cap_feed_source_save().
+ */
+function cap_alerts_aggregator_connector_parks_overrides_cap_feed_source_save($entity, FormStateInterface $form_state): void {
+  $overrides = [];
+  foreach ((array) $form_state->getValue(['parks_overrides', 'rows']) as $row) {
+    if (($row['park_id'] ?? '') === '') {
+      continue;
+    }
+    $overrides[] = [
+      'parkId' => $row['park_id'],
+      'minSeverity' => $row['min_severity'] ?? '',
+      'minCertainty' => $row['min_certainty'] ?? '',
+      'minUrgency' => $row['min_urgency'] ?? '',
+      'categoryAllowlist' => $row['category_allowlist'] ?? '',
+      'msgtypeDenylist' => $row['msgtype_denylist'] ?? '',
+      'agencyAllowlist' => $row['agency_allowlist'] ?? '',
+      'agencyDenylist' => $row['agency_denylist'] ?? '',
+      'requireGeometry' => $row['require_geometry'] ?? '',
+    ];
+  }
+  \Drupal::configFactory()->getEditable('cap_alerts_aggregator_connector_parks_overrides.source.' . $entity->id())
+    ->set('overrides', $overrides)
+    ->save();
+}
+
+/**
+ * Implements hook_cap_feed_source_api_source_alter().
+ */
+function cap_alerts_aggregator_connector_parks_overrides_cap_feed_source_api_source_alter(array &$source, $entity): void {
+  $overrides = \Drupal::config('cap_alerts_aggregator_connector_parks_overrides.source.' . $entity->id())->get('overrides') ?? [];
+  foreach ($overrides as &$override) {
+    $override['requireGeometry'] = match ($override['requireGeometry'] ?? '') {
+      '1' => TRUE,
+      '0' => FALSE,
+      default => '',
+    };
+  }
+  $source['parkOverrides'] = $overrides;
+}
+
+/**
+ * Implements hook_cap_feed_source_delete().
+ */
+function cap_alerts_aggregator_connector_parks_overrides_cap_feed_source_delete($entity): void {
+  \Drupal::configFactory()->getEditable('cap_alerts_aggregator_connector_parks_overrides.source.' . $entity->id())->delete();
+}

@@ -155,132 +155,9 @@ class CapFeedSourceForm extends EntityForm {
       '#default_value' => $entity->get('require_geometry'),
     ];
 
-    $form['park_overrides_wrapper'] = $this->buildParkOverridesForm($form_state);
+    \Drupal::moduleHandler()->alter('cap_feed_source_form', $form, $form_state, $entity);
 
     return $form;
-  }
-
-  /**
-   * Builds the repeatable "per-park override" AJAX sub-form.
-   */
-  private function buildParkOverridesForm(FormStateInterface $form_state): array {
-    /** @var \Drupal\cap_alerts_aggregator_connector\Entity\CapFeedSourceInterface $entity */
-    $entity = $this->entity;
-
-    if ($form_state->get('park_overrides_count') === NULL) {
-      $existing = $entity->getParkOverrides();
-      $form_state->set('park_overrides_count', max(count($existing), 1));
-      $form_state->set('park_overrides_initial', array_values($existing));
-    }
-    $count = $form_state->get('park_overrides_count');
-    $initial = $form_state->get('park_overrides_initial');
-
-    $wrapper = [
-      '#type' => 'details',
-      '#title' => $this->t('Per-park overrides'),
-      '#description' => $this->t('These overrides apply only to the matching park\'s published output, after geographic matching. Leave a field blank to use this source\'s base filter for that park.'),
-      '#open' => !empty($initial),
-      '#tree' => TRUE,
-      '#prefix' => '<div id="park-overrides-wrapper">',
-      '#suffix' => '</div>',
-    ];
-
-    $wrapper['park_overrides'] = ['#tree' => TRUE];
-    for ($i = 0; $i < $count; $i++) {
-      $default = $initial[$i] ?? [];
-      $wrapper['park_overrides'][$i] = $this->buildParkOverrideRow($i, $default);
-    }
-
-    $wrapper['add'] = [
-      '#type' => 'submit',
-      '#value' => $this->t('Add another override'),
-      '#submit' => ['::addParkOverride'],
-      '#ajax' => [
-        'callback' => '::parkOverridesAjax',
-        'wrapper' => 'park-overrides-wrapper',
-      ],
-    ];
-
-    return $wrapper;
-  }
-
-  /**
-   * Builds one row of the park_overrides sub-form.
-   */
-  private function buildParkOverrideRow(int $delta, array $default): array {
-    $row = [
-      '#type' => 'fieldset',
-      '#title' => $this->t('Override @n', ['@n' => $delta + 1]),
-    ];
-    $row['gatsby_endpoint'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Park'),
-      '#options' => ['' => $this->t('- Select -')] + $this->getWebsiteGatsbyEndpointOptions(),
-      '#default_value' => $default['gatsby_endpoint'] ?? '',
-    ];
-    $row['min_severity'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Minimum severity override'),
-      '#options' => ['' => $this->t('- No override -')] + array_combine(self::SEVERITIES, self::SEVERITIES),
-      '#default_value' => $default['min_severity'] ?? '',
-    ];
-    $row['min_certainty'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Minimum certainty override'),
-      '#options' => ['' => $this->t('- No override -')] + array_combine(self::CERTAINTIES, self::CERTAINTIES),
-      '#default_value' => $default['min_certainty'] ?? '',
-    ];
-    $row['min_urgency'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Minimum urgency override'),
-      '#options' => ['' => $this->t('- No override -')] + array_combine(self::URGENCIES, self::URGENCIES),
-      '#default_value' => $default['min_urgency'] ?? '',
-    ];
-    $row['category_allowlist'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Category allowlist override'),
-      '#default_value' => $default['category_allowlist'] ?? '',
-    ];
-    $row['agency_allowlist'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('CAP sender allowlist override'),
-      '#default_value' => $default['agency_allowlist'] ?? '',
-    ];
-    $row['agency_denylist'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('CAP sender denylist override'),
-      '#default_value' => $default['agency_denylist'] ?? '',
-    ];
-    return $row;
-  }
-
-  /**
-   * Gets `{id: label}` options for non-"_app" gatsby_endpoint entities.
-   */
-  private function getWebsiteGatsbyEndpointOptions(): array {
-    $storage = $this->entityTypeManager->getStorage('gatsby_endpoint');
-    $options = [];
-    foreach ($storage->loadMultiple() as $endpoint) {
-      if (!str_ends_with($endpoint->id(), '_app')) {
-        $options[$endpoint->id()] = $endpoint->label();
-      }
-    }
-    return $options;
-  }
-
-  /**
-   * Submit handler for the "Add another override" button.
-   */
-  public function addParkOverride(array &$form, FormStateInterface $form_state): void {
-    $form_state->set('park_overrides_count', $form_state->get('park_overrides_count') + 1);
-    $form_state->setRebuild();
-  }
-
-  /**
-   * AJAX callback returning the rebuilt park_overrides wrapper.
-   */
-  public function parkOverridesAjax(array &$form, FormStateInterface $form_state): array {
-    return $form['park_overrides_wrapper'];
   }
 
   /**
@@ -297,21 +174,15 @@ class CapFeedSourceForm extends EntityForm {
         '@sources' => implode(', ', $duplicates),
       ]));
     }
+    \Drupal::moduleHandler()->alter('cap_feed_source_validate', $form, $form_state, $this->entity);
   }
 
   /**
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state): int {
-    $overrides = [];
-    foreach ((array) $form_state->getValue(['park_overrides_wrapper', 'park_overrides']) as $row) {
-      if (!empty($row['gatsby_endpoint'])) {
-        $overrides[] = $row;
-      }
-    }
-    $this->entity->set('park_overrides', array_values($overrides));
-
     $result = parent::save($form, $form_state);
+    \Drupal::moduleHandler()->invokeAll('cap_feed_source_save', [$this->entity, $form_state]);
     $this->messenger()->addStatus($this->t('Saved the %label CAP Feed Source.', [
       '%label' => $this->entity->label(),
     ]));

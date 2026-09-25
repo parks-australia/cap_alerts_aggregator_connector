@@ -85,7 +85,7 @@ class CapFeedSourceApiController implements ContainerInjectionInterface {
       $credential = $key ? $key->getKeyValue() : NULL;
     }
 
-    return [
+    $source = [
       'id' => $entity->id(),
       'label' => $entity->label(),
       'feedUrl' => $entity->getFeedUrl(),
@@ -100,8 +100,9 @@ class CapFeedSourceApiController implements ContainerInjectionInterface {
       'agencyAllowlist' => $this->splitList($entity->get('agency_allowlist')),
       'agencyDenylist' => $this->splitList($entity->get('agency_denylist')),
       'requireGeometry' => (bool) $entity->get('require_geometry'),
-      'parkOverrides' => $entity->getParkOverrides(),
     ];
+    \Drupal::moduleHandler()->alter('cap_feed_source_api_source', $source, $entity);
+    return $source;
   }
 
   /**

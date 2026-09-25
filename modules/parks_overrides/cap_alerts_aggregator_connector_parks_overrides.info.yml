@@ -1,0 +1,8 @@
+name: 'CAP Alerts Aggregator Connector: Parks Overrides'
+type: module
+description: 'Adds gatsby_endpoint-specific filter overrides to CAP Feed Sources.'
+package: 'CAP Safety Alerts'
+core_version_requirement: ^11
+dependencies:
+  - cap_alerts_aggregator_connector:cap_alerts_aggregator_connector
+  - gatsby_endpoints:gatsby_endpoints

@@ -56,8 +56,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     "msgtype_denylist",
  *     "agency_allowlist",
  *     "agency_denylist",
- *     "require_geometry",
- *     "park_overrides"
+ *     "require_geometry"
  *   }
  * )
  */
@@ -138,17 +137,6 @@ class CapFeedSource extends ConfigEntityBase implements CapFeedSourceInterface {
   protected bool $require_geometry = FALSE;
 
   /**
-   * Per-park filter overrides for this (typically multi-park) source.
-   *
-   * Each item: {gatsby_endpoint, min_severity, min_certainty, min_urgency,
-   * category_allowlist, agency_allowlist, agency_denylist}. Blank override
-   * values mean "use this source's base filter" for that field.
-   *
-   * @var array<int, array<string, string>>
-   */
-  protected array $park_overrides = [];
-
-  /**
    * {@inheritdoc}
    */
   public function getFeedUrl(): string {
@@ -181,13 +169,6 @@ class CapFeedSource extends ConfigEntityBase implements CapFeedSourceInterface {
    */
   public function getCredentialKeyId(): string {
     return $this->credential_key;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getParkOverrides(): array {
-    return $this->park_overrides;
   }
 
   /**

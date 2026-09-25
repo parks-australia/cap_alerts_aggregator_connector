@@ -1,0 +1,19 @@
+cap_alerts_aggregator_connector_parks_overrides.source.*:
+  type: config_object
+  label: 'CAP Feed Source park overrides'
+  mapping:
+    overrides:
+      type: sequence
+      label: 'Overrides'
+      sequence:
+        type: mapping
+        mapping:
+          parkId: { type: string, label: 'Park ID' }
+          minSeverity: { type: string, label: 'Minimum severity' }
+          minCertainty: { type: string, label: 'Minimum certainty' }
+          minUrgency: { type: string, label: 'Minimum urgency' }
+          categoryAllowlist: { type: string, label: 'Category allowlist' }
+          msgtypeDenylist: { type: string, label: 'msgType denylist' }
+          agencyAllowlist: { type: string, label: 'CAP sender allowlist' }
+          agencyDenylist: { type: string, label: 'CAP sender denylist' }
+          requireGeometry: { type: string, label: 'Require geometry override' }

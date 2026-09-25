@@ -16,3 +16,17 @@ function cap_alerts_aggregator_connector_update_9001(): void {
     $source->save();
   }
 }
+
+/**
+ * Removes park-specific overrides from the portable Feed Source entity.
+ */
+function cap_alerts_aggregator_connector_update_9002(): void {
+  $storage = \Drupal::entityTypeManager()->getStorage('cap_feed_source');
+  $ids = $storage->getQuery()->accessCheck(FALSE)->execute();
+  foreach ($ids as $id) {
+    \Drupal::configFactory()
+      ->getEditable('cap_alerts_aggregator_connector.cap_feed_source.' . $id)
+      ->clear('park_overrides')
+      ->save();
+  }
+}

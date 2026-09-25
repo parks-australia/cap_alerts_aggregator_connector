@@ -1,0 +1,12 @@
+<?php
+
+/**
+ * Removes Parks Override configuration when the optional module is uninstalled.
+ */
+function cap_alerts_aggregator_connector_parks_overrides_uninstall(): void {
+  $storage = \Drupal::service('config.storage');
+  $factory = \Drupal::configFactory();
+  foreach ($storage->listAll('cap_alerts_aggregator_connector_parks_overrides.source.') as $name) {
+    $factory->getEditable($name)->delete();
+  }
+}

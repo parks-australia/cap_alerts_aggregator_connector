@@ -36,13 +36,4 @@ interface CapFeedSourceInterface extends ConfigEntityInterface {
    */
   public function getCredentialKeyId(): string;
 
-  /**
-   * Gets the per-park filter overrides for this source.
-   *
-   * @return array<int, array<string, string>>
-   *   Each item: {gatsby_endpoint, min_severity, min_certainty, min_urgency,
-   *   category_allowlist, agency_allowlist, agency_denylist}.
-   */
-  public function getParkOverrides(): array;
-
 }
