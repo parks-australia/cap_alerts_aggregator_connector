@@ -1,6 +1,20 @@
 <?php
 
 /**
+ * Prevents uninstall while park override configuration remains.
+ */
+function cap_alerts_aggregator_connector_parks_overrides_pre_uninstall(): void {
+  $names = \Drupal::service('config.storage')
+    ->listAll('cap_alerts_aggregator_connector_parks_overrides.source.');
+  foreach ($names as $name) {
+    $overrides = \Drupal::config($name)->get('overrides') ?? [];
+    if ($overrides) {
+      throw new \RuntimeException('Remove all per-park overrides before uninstalling Parks Overrides.');
+    }
+  }
+}
+
+/**
  * Removes Parks Override configuration when the optional module is uninstalled.
  */
 function cap_alerts_aggregator_connector_parks_overrides_uninstall(): void {

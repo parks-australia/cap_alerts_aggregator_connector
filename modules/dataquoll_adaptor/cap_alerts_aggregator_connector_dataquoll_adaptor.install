@@ -1,0 +1,15 @@
+<?php
+
+/**
+ * Prevents uninstall while DataQuoll Feed Sources remain configured.
+ */
+function cap_alerts_aggregator_connector_dataquoll_adaptor_pre_uninstall(): void {
+  $storage = \Drupal::entityTypeManager()->getStorage('cap_feed_source');
+  $ids = $storage->getQuery()
+    ->condition('feed_format', 'dataquoll-geojson')
+    ->accessCheck(FALSE)
+    ->execute();
+  if ($ids) {
+    throw new \RuntimeException('Change or delete all DataQuoll Feed Sources before uninstalling the DataQuoll Adaptor.');
+  }
+}

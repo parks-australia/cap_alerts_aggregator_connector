@@ -30,3 +30,17 @@ function cap_alerts_aggregator_connector_update_9002(): void {
       ->save();
   }
 }
+
+/**
+ * Prevents uninstall while CAP Feed Source entities remain.
+ */
+function cap_alerts_aggregator_connector_pre_uninstall(): void {
+  $ids = \Drupal::entityTypeManager()
+    ->getStorage('cap_feed_source')
+    ->getQuery()
+    ->accessCheck(FALSE)
+    ->execute();
+  if ($ids) {
+    throw new \RuntimeException('Delete all CAP Feed Source entities before uninstalling CAP Alerts Aggregator Connector.');
+  }
+}
