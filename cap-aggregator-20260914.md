@@ -1,6 +1,6 @@
 # CAP Alerts Real-Time Aggregation — Architecture Plan (2026-09-14, grilled)
 
-## Implementation status (last updated 2026-09-16)
+## Implementation status (last updated 2026-09-28)
 
 **Module boundary update:** the "CAP Feed Source" config entity and any other Drupal-side
 aggregator-connector logic now live in a **separate, new module**, `cap_alerts_aggregator_connector`
@@ -15,18 +15,26 @@ attribution field, Location auto-relate). Everywhere below that previously said 
 | 1.A | "CAP Feed Source" config entity | ✅ Done | Lives in `cap_alerts_aggregator_connector`. Entity/form/list/routing/permissions, Key-module credential, repeatable `park_overrides` sub-form, and a locked-down `/api/cap-alerts/feed-sources` JSON endpoint (shared-secret header, validated against a Key entity) — all implemented and verified end-to-end in DDEV, including real HTTP requests with correct/wrong/missing secrets |
 | 1.B | Alert park attribution (`field_site`, restricted to non-`_app`) | ✅ Done | In `cap_alerts_parks_australia`. Implemented + verified in DDEV (custom `EntityReferenceSelection` plugin) |
 | 1.C | Location auto-relate presave logic (geometry match) | ✅ Done | In `cap_alerts_parks_australia`. `CapAlertLocationRelator` service + `hook_node_presave`, verified end-to-end in DDEV |
-| 1.D | Park boundary GeoJSON data | ⬜ Outstanding | Waiting on user-provided per-park files; blocks aggregator geo-filtering, not the Drupal-side work |
-| 2 | Aggregator service (new standalone repo, AWS) | 🟨 Partial | Node.js 22 project now scaffolded at `~/repositories/parks_australia/cap_alerts_aggregator` with AWS SAM, EventBridge schedule, DynamoDB state table, S3 state/output resources, SSM secret parameters, Drupal Feed Source client, RSS/Atom canonical-link ingestion, CAP XML normalization, source-health persistence, lifecycle reduction (expiry, Cancel references, Update supersession), Turf-based CAP polygon/circle geometry normalization, multi-park boundary assignment, and S3 publication to `alerts/<park>.json` with `Cache-Control: max-age=60`. Remaining: user-provided boundary files, Drupal park/location attribution, native GeoJSON/EDXL-DE adapters, CloudFront, monitoring, and deployment configuration |
-| 3 | DataQuoll integration | ⬜ Outstanding | Depends on aggregator service (2) |
-| 4 | Output schema | ⬜ Outstanding | Depends on aggregator service (2) |
+| 1.D | Park boundary GeoJSON data | ✅ Done | Seven park boundary files are versioned under `cap_alerts_aggregator/assets/boundary_data` and covered by assignment tests |
+| 2 | Aggregator service (new standalone repo, AWS) | 🟨 Partial | Local ingestion, lifecycle/filter processing, boundary assignment, per-park output, S3 writes, DynamoDB per-alert state, two-poll disappearance handling, last-known-good degraded recovery, and change-only source health logs are implemented. Remaining production work includes EDXL-DE, CloudFront, alarms/SNS, and deployment configuration |
+| 3 | DataQuoll integration | 🟨 Partial | Adapter, pagination, normalization, authentication, and filter integration are implemented; comprehensive edge-case tests and live volume benchmarking remain |
+| 4 | Output schema | ✅ Done | Version-one JSON Schema is in `cap_alerts_aggregator/schemas/park-alerts-v1.schema.json`. Outputs include source health, attribution, source type, fresh/degraded state, exact circle metadata, and Parks CAP parameter-derived park/Location associations |
 | 5 | Gatsby frontend — live map, Place pages, Access Reports | ⬜ Outstanding | Depends on aggregator service (2) and output schema (4). Runtime Aggregator retrieval must cover Leaflet maps, Drupal Place pages, and Access Report maps/tables. |
 | 6 | Gatsby build-time GraphQL — Alert↔Place relationship | 🟨 Partial | Resolver re-enabled in `gatsby-node.js`; `relatedCapAlerts { ...CapAlertData }` uncommented in `locationData.tsx` and `place.tsx`, and Drupal-authored Alert nodes now render in Gatsby builds. The Drupal relationship is **association metadata only**: Alert→Location establishes which Place/Location a Drupal-authored Alert relates to. It is not the source of current Alert content and must not be used to determine whether an Alert is active. When a Place page or Access Report loads, Gatsby must use the related Location identifier(s) to retrieve current, filtered Alert data from the CAP Aggregator. **Current limitation:** the existing build-time GraphQL results undergo no Alert lifecycle filtering. Expired and cancelled Alerts, including new and updated Alerts in the same incident chain, are all exposed and rendered. Consequently, one incident with five CAP Alert messages currently appears as five separate frontend Alerts instead of one current Alert. |
 
-**Connector testing gap:** the API response shape has been exercised, but the following
-`cap_alerts_aggregator_connector` fields have not yet been functionally tested with non-empty or
-non-default values: `categoryAllowlist`, `msgtypeDenylist`, `agencyAllowlist`, `agencyDenylist`,
-`requireGeometry`, and `parkOverrides`. Add coverage for saving each value through the Drupal form,
-serializing it through `/api/cap-alerts/feed-sources`, and consuming it in the Aggregator filters.
+**Connector test-suite requirement:** add automated Drupal tests for
+`cap_alerts_aggregator_connector` before treating the connector as production-ready. Cover source
+CRUD; Key-backed credential resolution; shared-secret API access and no-cache behavior; duplicate URL
+validation; and serialization of every non-default base filter through
+`/api/cap-alerts/feed-sources`. Test optional submodules independently: the DataQuoll adaptor must
+only register its format when enabled; the Parks Overrides adaptor must persist and serialize each
+override filter, inherit blank fields from the source filter in the Aggregator, and reject a second
+override group for the same park. Include an enabled/disabled-module isolation test so the portable
+base connector has neither provider-specific formats nor `gatsby_endpoint`/park override data unless
+the relevant adaptor is enabled. All modules must also have tested uninstall behavior: refuse
+uninstall when any entity or configuration record they own still exists (the base connector while
+`cap_feed_source` entities exist; each adaptor while its provider- or park-specific configuration
+exists), then uninstall cleanly without orphaned configuration after those records are removed.
 
 Known-good, verified-in-DDEV building blocks so far: `field_site` restricted to website
 `gatsby_endpoint`s only (no `_app`); `field_location_reference` re-enabled and auto-populated by
@@ -34,6 +42,66 @@ geometry match, scoped to matching `field_site`, additive-only; `cap_feed_source
 working correctly from its new home in `cap_alerts_aggregator_connector`. See
 `/memories/repo/cap-alerts-parks-australia-drupal-notes.md` for implementation gotchas encountered
 (colon-free plugin IDs, config entity query operator limits, geophp/itamair class collision).
+
+## Deployment and observability findings (2026-09-29)
+
+Recorded during the first AWS SAM deployment of `cap_alerts_aggregator` to
+`parks-test-cap-alerts-aggregator` (ap-southeast-2). The current build is sufficient to continue
+implementation; these are follow-ups, not blockers.
+
+### Resolved during deployment
+
+| # | Issue | Resolution |
+|---|---|---|
+| D.1 | `cap-atom` sources returned 0 alerts while reporting healthy | DataQuoll embeds CAP inline in `<content type="application/xml">` and publishes no per-entry `<link>`. Added `extractInlineCapAlerts()`; link-following retained as fallback |
+| D.2 | Zero-result feeds were indistinguishable from empty feeds | Added `ingestion.entryCount` and an explicit error when a feed has entries but yields neither inline alerts nor canonical links |
+| D.3 | `cap-au`/`cap-atom` returned only 100 items vs 3151 via GeoJSON | Added `withDefaultLimit()`, applying `limit=500` to RSS/Atom/CAP-XML feed URLs unless the source already specifies one |
+| D.4 | Deploys silently shipped stale code | `sam deploy` packages `.aws-sam/build/` when present. Added `npm run sam:deploy` (`sam build && sam deploy`) |
+| D.5 | `aws-sam-cli-managed-default-*` assets kept reappearing | `sam deploy --guided` resets `resolve_s3` to `true` and rewrites `samconfig.toml`. Pinned `resolve_s3 = false` with a dedicated `parks-test-cap-alerts-aggregator-artifacts` bucket; do not use `--guided` |
+| D.6 | Deployed resources had inconsistent, generated names | Explicit `FunctionName`, `TableName`, `BucketName` and schedule `Name` derived from `${AWS::StackName}` |
+
+### Outstanding — ingestion
+
+- **CAP/Atom cannot reach the full source set.** DataQuoll caps CAP/Atom at 500 items per request
+  (`limit=5000` returns zero) and exposes no `next_cursor`, `rel="next"` or `Link` header, so page
+  two is undiscoverable. GeoJSON remains the only format able to enumerate all ~3382 incidents.
+  Treat CAP/Atom as interoperability surfaces, not bulk ingestion. Cursor synthesis from the
+  undocumented base64 keyset cursor was considered and rejected as vendor-specific and fragile.
+- **GeoJSON total drift.** A full paginated run ingested 3151 against a reported `total_count` of
+  3382. Likely cursor drift as records update mid-traversal. Needs investigation before volume
+  benchmarking (item 3).
+- **`limit=500` is now sent to all RSS/Atom sources**, including USGS, RFS and BOM. Unknown query
+  parameters are normally ignored, but this is the first thing to check if those feeds misbehave.
+
+### Outstanding — observability
+
+- **Source health logging is transition-only.** `logHealthChange()` fires only when status or error
+  text changes, so a persistently degraded source is silent after its first failure. Absence of
+  recent log entries does not indicate health. Add a periodic "still degraded" heartbeat, plus a
+  CloudWatch metric filter on `feed-source-health-changed` and an SNS alarm.
+- **No log retention.** The Lambda log group is runtime-created, so it never expires and is
+  orphaned on stack deletion. Add an `AWS::Logs::LogGroup` with `RetentionInDays` to the template.
+- **Degraded state is not queryable with the deploy credential.** The IAM policy omits `logs:*` and
+  DynamoDB read actions. Per-source `status`, `error`, `updated_at` and `last_success` live in the
+  `-feed-state` table; park outputs expose `status`/`lastSuccess` but deliberately omit the error.
+
+### Outstanding — environment and access
+
+- **Feed Source URLs must be publicly resolvable.** `*.ddev.site` resolves publicly to `127.0.0.1`,
+  so Lambda connects to its own loopback and reports `fetch failed`. Test deployment currently
+  depends on an ngrok tunnel to a workstation; production Feed Sources must point at a reachable
+  CMS.
+- **No production environment exists.** Prod needs its own stack name, artifact bucket, SSM
+  SecureString, and IAM policy (the current policy is scoped to `parks-test-cap-alerts-aggregator-*`).
+  Set `disable_rollback = false` for prod — it is `true` for test only, to preserve failure evidence.
+- **S3 outputs are private.** Block Public Access is fully on and there is no bucket policy, so an
+  anonymous `GET` returns 403. Item 5 (Gatsby frontend) needs CloudFront + Origin Access Control,
+  plus a CORS configuration; neither exists yet.
+- **Deploy credential is an IAM user with long-lived keys** in an account that also holds
+  `alm-production-*` stacks. Prefer a role assumed via IAM Identity Center or OIDC.
+- **Template grants `ssm:GetParameter` on `Resource: "*"`.** Scope to the single parameter ARN.
+- **Lambda execution role name is truncated** (`parks-test-cap-alerts-aggreg-...`). Controlling it
+  requires `CAPABILITY_NAMED_IAM` and hand-written policies in place of SAM policy templates.
 
 ## Problem
 
@@ -277,6 +345,11 @@ reduction, per-park S3 publication, or CloudFront delivery has been implemented.
   boundary. Any alert whose geometry intersects **more than one park's boundary** is duplicated into
   each matching park's per-park output (each evaluated against that park's own filter overrides) —
   keeps every park's JSON self-contained.
+- **Drupal park constraint:** explicit park IDs limit the parks eligible for publication but never
+  bypass geographic matching. If geometry exists, the alert must intersect an explicitly selected
+  park and is not reassigned to another park. Geometry-less Drupal alerts fall back to their explicit
+  park IDs. Per-park Feed Source overrides only change filtering after assignment; they never assign
+  alerts to parks.
 - **Partial-failure handling:** if one Feed Source fails/rate-limits mid-cycle, publish using fresh
   data from the succeeding sources plus **last-known-good cached data** (from DynamoDB) for the failed
   one, tagged `degraded: true` in output metadata — a single feed outage shouldn't take down alerts
