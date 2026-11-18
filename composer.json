@@ -16,6 +16,10 @@
   "minimum-stability": "dev",
   "repositories": [
     {
+      "type": "vcs",
+      "url": "https://git.drupalcode.org/project/cap_alerts.git"
+    },
+    {
       "type": "package",
       "package": {
         "name": "drupal/cap_alerts_aggregator_connector",
@@ -30,7 +34,7 @@
     }
   ],
   "require": {
-    "drupal/cap_alerts": "^2.1",
+    "drupal/cap_alerts": "3.0.x-dev",
     "drupal/key": "^1.22"
   }
 }
